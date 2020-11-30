@@ -16,6 +16,7 @@ app.use(bodyParser.json())
 
 // Serve static files
 app.use('/public', express.static(process.cwd() + '/public'));
+//app.use('/public/uploads', express.static(process.cwd() + '/public/uploads'));
 app.get('/', function (req, res) {
     res.sendFile(process.cwd() + '/views/index.html');
 });
@@ -34,5 +35,11 @@ app.listen(port, function () {
 
 // Read file metadata
 app.post("/api/fileanalyse", upload.single("upfile"), (req,res)=>{
-  console.log(req.file)
+  console.log(req.file);
+  let logJson = {
+    name: req.file.originalname,
+    type: req.file.mimetype,
+    size: req.file.size
+  };
+  res.json(logJson);
 })

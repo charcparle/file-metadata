@@ -1,0 +1,144 @@
+function checkCashRegister(price, cash, cid) {
+  var result={};
+  const currencyTable=[
+    ["PENNY", 0.01],
+    ["NICKEL", 0.05],
+    ["DIME", 0.100],
+    ["QUARTER", 0.250],
+    ["ONE", 1.000],
+    ["FIVE", 5.000],
+    ["TEN", 10.000],
+    ["TWENTY", 20.000],
+    ["ONE HUNDRED", 100.000]
+  ];
+  function getValue(someCurName){
+    let val=0.000;
+    val = currencyTable.reduce(function(acc,pair){
+      if(pair[0]==someCurName){
+        val=pair[1];
+      } else {
+        val=0;
+      }
+      acc+=val;
+      return acc;
+    },0)
+    return val;
+  };
+  //console.log(getValue("PENNY"))
+  function countCash(arr){
+    let obj={};
+    obj=arr.reduce(function(acc,cur){
+      acc[cur[0]]=Math.round(cur[1]/getValue(cur[0]));
+      return acc;
+    },{})
+    return obj;
+  };
+  
+  function showCash(obj){
+    let arr=[];
+    arr=Object.keys(obj).reduce(function(acc,cur){
+      acc.push([cur,Math.round(obj[cur]*getValue(cur)*1000)/1000])
+      return acc;
+    },[])
+    return arr;
+  }
+
+  function getPayable(changeAmount, cashDrawer){
+    let cashSource=countCash(cashDrawer);
+    let sumPay=changeAmount*1.000;
+    let sortedCur=Object.keys(cashSource).sort((a,b)=>(getValue(b)-getValue(a)))
+    //console.log(sortedCur)
+    sumPay=sortedCur.reduce(function(acc,cur){
+      if (acc<=0){
+        console.log("sumPay reaches zero");
+        return acc;
+      }
+      console.log("cur: "+cur)
+      let m=acc/getValue(cur);
+      for (let i=1;i<=m;i++){
+        if(cashSource[cur]>0){
+          console.log("m,i: "+m+","+i)
+          acc-=getValue(cur);
+          cashSource[cur]-=1
+        } else  {
+          break;
+        }
+      }
+      acc=Math.round(acc*100000)/100000
+      console.log("acc: "+acc)
+      return acc;
+    },sumPay)
+    console.log(cashSource)
+    return Math.round(sumPay*10000)/10000
+  };
+
+  function getChange(changeAmount,cashDrawer){
+    let cashSource=cashDrawer;
+    let cArr=[];
+    let sumPay=changeAmount*1.000;
+    let sortedCur=Object.keys(cashSource).sort((a,b)=>(getValue(b)-getValue(a)))
+    console.log("cashSource: ")
+    console.log(cashSource)
+    cArr=sortedCur.reduce(function(acc,cur){
+      let m=sumPay/getValue(cur);
+      let tempCash=0
+      for(let i=1;i<=m;i++){
+        console.log("m,i: "+m+","+i)
+        if(cashSource[cur]>0){
+          cashSource[cur]-=1
+          sumPay-=getValue(cur)
+          tempCash+=getValue(cur)
+        }else{
+          break;
+        }
+        sumPay=Math.round(sumPay*100000)/100000
+      }
+      tempCash=Math.round(tempCash*100000)/100000;
+      console.log("tempCash: "+tempCash)
+      if(tempCash>0){
+        console.log("push changeArr")
+        acc.push([cur,tempCash])
+      }
+      return acc;
+    },[])
+    return [cArr, sumPay];
+  }
+
+
+  let drawer=countCash(cid);
+  console.log(drawer);
+  
+
+  let changeSum=cash-price;
+ // let payable=getPayable(changeSum,cid);
+  let [changeArr, payable]=getChange(changeSum,drawer)
+  
+  console.log("payable: "+payable)
+  console.log("changeArr: "+changeArr)
+
+  if (payable>0){
+    result.status="INSUFFICIENT_FUNDS";
+    result.change=[];
+  } else if (payable==0){
+    let cashArray=showCash(drawer);
+    console.log(cashArray)
+    let remainingCash=Math.round(cashArray.reduce((acc,item)=>(acc+item[1]*1),0)*100000)/100000;
+    console.log(remainingCash);
+    if (remainingCash==0){
+      result.status="CLOSED";
+      result.change=cid;
+    } else {
+      result.status="OPEN";
+      result.change=changeArr.filter((c)=>(c[1]>0)).sort((a,b)=>(getValue(b[0])-getValue(a[0])));
+    }
+
+  } else  {
+    console.log("ERROR, payable<0")
+  }
+  console.log(result);
+  return result;
+}
+
+checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]);
+checkCashRegister(3.26, 100, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]])
+checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]])
